@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory Orders</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: #f4f6f8;
+  }
+
+  .container {
+    width: 95%;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+  }
+
+  th {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn {
+    padding: 5px 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    margin: 2px;
+  }
+
+  .view { background: #17a2b8; }
+  .edit { background: #ffc107; color: black; }
+  .delete { background: #dc3545; }
+  .status { background: #28a745; }
+
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 5px;
+    color: white;
+  }
+
+  .pending { background: orange; }
+  .packed { background: blue; }
+  .delivered { background: green; }
+
+  .common-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 10px 0 14px;
+  }
+
+  .export { background: #6f42c1; }
+  .redirect { background: #fd7e14; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: #fff;
+    width: 360px;
+    max-width: 92%;
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: left;
+  }
+
+  .modal h3 {
+    margin: 0 0 10px;
+  }
+
+  .modal select {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .modal-msg {
+    margin: 0 0 8px;
+    color: #dc3545;
+    font-size: 14px;
+    min-height: 18px;
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>📦  Orders Inventory</h2>
+  <div class="common-actions">
+    <button class="btn redirect" onclick="redirectSelectedOrders()">Redirect Selected</button>
+    <button class="btn export" onclick="exportOrders()">Export</button>
+  </div>
+
+  <table id="orderTable">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Shop</th>
+        <th>Date</th>
+        <th>Total (₹)</th>
+        <th>Status</th>
+        <th>Redirected To</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td><input type="checkbox" class="row-checkbox" onchange="updateSelectAll()"></td>
+        <td>#1001</td>
+        <td>Ravi Traders</td>
+        <td>Ravi Store</td>
+        <td>02-May-2026</td>
+        <td>3500</td>
+        <td><span class="status-badge pending">Pending</span></td>
+        <td class="redirect-location">-</td>
+        <td>
+          <button class="btn view" onclick="viewOrder(1001)">View</button>
+          <button class="btn edit" onclick="editOrder(1001)">Edit</button>
+          <button class="btn status" onclick="changeStatus(this)">Change</button>
+          <button class="btn delete" onclick="deleteOrder(this)">Delete</button>
+        </td>
+      </tr>
+
+      <tr>
+        <td><input type="checkbox" class="row-checkbox" onchange="updateSelectAll()"></td>
+        <td>#1002</td>
+        <td>Kumar & Co</td>
+        <td>Kumar Shop</td>
+        <td>01-May-2026</td>
+        <td>7200</td>
+        <td><span class="status-badge packed">Packed</span></td>
+        <td class="redirect-location">-</td>
+        <td>
+          <button class="btn view" onclick="viewOrder(1002)">View</button>
+          <button class="btn edit" onclick="editOrder(1002)">Edit</button>
+          <button class="btn status" onclick="changeStatus(this)">Change</button>
+          <button class="btn delete" onclick="deleteOrder(this)">Delete</button>
+        </td>
+      </tr>
+
+      <tr>
+        <td><input type="checkbox" class="row-checkbox" onchange="updateSelectAll()"></td>
+        <td>#1003</td>
+        <td>Selvam Stores</td>
+        <td>Selvam Mart</td>
+        <td>30-Apr-2026</td>
+        <td>5400</td>
+        <td><span class="status-badge delivered">Delivered</span></td>
+        <td class="redirect-location">-</td>
+        <td>
+          <button class="btn view" onclick="viewOrder(1003)">View</button>
+          <button class="btn edit" onclick="editOrder(1003)">Edit</button>
+          <button class="btn status" onclick="changeStatus(this)">Change</button>
+          <button class="btn delete" onclick="deleteOrder(this)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div id="redirectModalOverlay" class="modal-overlay">
+  <div class="modal">
+    <h3>Redirect Orders</h3>
+    <p id="redirectCountText">0 order(s) selected</p>
+    <p id="redirectModalMsg" class="modal-msg"></p>
+    <select id="redirectDestination">
+      <option value="">Select destination</option>
+      <option value="Office Location">Office Location</option>
+      <option value="Mill Location">Mill Location</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn delete" onclick="closeRedirectModal()">Cancel</button>
+      <button class="btn redirect" onclick="confirmRedirect()">Confirm Redirect</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedRedirectRows = [];
+
+function viewOrder(id) {
+  alert("Viewing Order: " + id);
+}
+
+function editOrder(id) {
+  alert("Editing Order: " + id);
+}
+
+function deleteOrder(btn) {
+  if (confirm("Are you sure to delete this order?")) {
+    let row = btn.parentNode.parentNode;
+    row.remove();
+    updateSelectAll();
+  }
+}
+
+function changeStatus(btn) {
+  let row = btn.parentNode.parentNode;
+  let statusCell = row.cells[6].querySelector("span");
+
+  let current = statusCell.innerText;
+
+  if (current === "Pending") {
+    statusCell.innerText = "Packed";
+    statusCell.className = "status-badge packed";
+  } else if (current === "Packed") {
+    statusCell.innerText = "Delivered";
+    statusCell.className = "status-badge delivered";
+  } else {
+    statusCell.innerText = "Pending";
+    statusCell.className = "status-badge pending";
+  }
+}
+
+function toggleSelectAll(selectAllCheckbox) {
+  const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+  rowCheckboxes.forEach((checkbox) => {
+    checkbox.checked = selectAllCheckbox.checked;
+  });
+}
+
+function updateSelectAll() {
+  const selectAllCheckbox = document.getElementById("selectAll");
+  const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+
+  if (rowCheckboxes.length === 0) {
+    selectAllCheckbox.checked = false;
+    return;
+  }
+
+  const allChecked = Array.from(rowCheckboxes).every((checkbox) => checkbox.checked);
+  selectAllCheckbox.checked = allChecked;
+}
+
+function exportOrders() {
+  const allRows = Array.from(document.querySelectorAll("#orderTable tbody tr"));
+  const selectedRows = allRows.filter((row) => row.querySelector(".row-checkbox").checked);
+
+  if (selectedRows.length === 0) {
+    alert("Please select at least one order to export.");
+    return;
+  }
+
+  const header = ["ID", "Customer", "Shop", "Date", "Total", "Status", "Redirected To"];
+  const csvRows = [header.join(",")];
+
+  selectedRows.forEach((row) => {
+    const order = [
+      row.cells[1].innerText,
+      row.cells[2].innerText,
+      row.cells[3].innerText,
+      row.cells[4].innerText,
+      row.cells[5].innerText,
+      row.cells[6].innerText,
+      row.cells[7].innerText
+    ].map((value) => `"${value.replace(/"/g, '""')}"`);
+
+    csvRows.push(order.join(","));
+  });
+
+  const csvContent = csvRows.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "inventory_orders.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function redirectSelectedOrders() {
+  const allRows = Array.from(document.querySelectorAll("#orderTable tbody tr"));
+  const selectedRows = allRows.filter((row) => row.querySelector(".row-checkbox").checked);
+
+  if (selectedRows.length === 0) {
+    const modalMsg = document.getElementById("redirectModalMsg");
+    modalMsg.style.color = "#dc3545";
+    modalMsg.innerText = "Please select at least one order to redirect.";
+    openRedirectModal([]);
+    return;
+  }
+
+  openRedirectModal(selectedRows);
+}
+
+function openRedirectModal(rows) {
+  selectedRedirectRows = rows;
+  const overlay = document.getElementById("redirectModalOverlay");
+  const countText = document.getElementById("redirectCountText");
+  const destinationSelect = document.getElementById("redirectDestination");
+  const modalMsg = document.getElementById("redirectModalMsg");
+
+  countText.innerText = selectedRedirectRows.length + " order(s) selected";
+  destinationSelect.value = "";
+  if (!modalMsg.innerText) {
+    modalMsg.innerText = "";
+  }
+  overlay.style.display = "flex";
+}
+
+function closeRedirectModal() {
+  const overlay = document.getElementById("redirectModalOverlay");
+  const modalMsg = document.getElementById("redirectModalMsg");
+  overlay.style.display = "none";
+  modalMsg.innerText = "";
+}
+
+function confirmRedirect() {
+  const destination = document.getElementById("redirectDestination").value;
+  const modalMsg = document.getElementById("redirectModalMsg");
+
+  if (selectedRedirectRows.length === 0) {
+    modalMsg.style.color = "#dc3545";
+    modalMsg.innerText = "No orders selected.";
+    return;
+  }
+
+  if (!destination) {
+    modalMsg.style.color = "#dc3545";
+    modalMsg.innerText = "Please choose a destination.";
+    return;
+  }
+
+  selectedRedirectRows.forEach((row) => {
+    row.cells[7].innerText = destination;
+  });
+
+  modalMsg.style.color = "#28a745";
+  modalMsg.innerText = selectedRedirectRows.length + " order(s) redirected to " + destination + ".";
+  setTimeout(closeRedirectModal, 900);
+}
+</script>
+
+</body>
+</html>

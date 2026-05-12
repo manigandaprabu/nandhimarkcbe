@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title> Nandhi Mark - Order</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    input, select {
+      padding: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 10px 15px;
+      cursor: pointer;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    .total {
+      text-align: right;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>B2B Order Entry</h2>
+
+  <!-- Customer Info -->
+  <h3>Customer Details</h3>
+  <div class="row">
+    <select id="customerName">
+      <option value="">Select Customer</option>
+      <option value="Arun Traders">Arun Traders</option>
+      <option value="Sri Lakshmi Stores">Sri Lakshmi Stores</option>
+      <option value="Velan Super Market">Velan Super Market</option>
+      <option value="Annai Agencies">Annai Agencies</option>
+    </select>
+    <input type="text" id="mobile" placeholder="Mobile Number">
+  </div>
+  <div class="row">
+    <input type="text" id="location" placeholder="Location">
+    <input type="text" id="shopName" placeholder="Sales Person">
+    
+  </div>
+  <div class="row">
+    <input type="text" id="billNumber" placeholder="Bill Number">
+    <input type="text" id="outstandingBalance" placeholder="Outstanding Balance">
+  </div>
+
+
+  <!-- Product Selection -->
+  <h3>Add Products</h3>
+  <div class="row">
+    <select id="product">
+      <option value="">Select Product</option>
+      <option value="Rice Bag" data-price="1200">Rice Bag - ₹1200</option>
+      <option value="Oil Tin" data-price="1800">Oil Tin - ₹1800</option>
+      <option value="Wheat Flour" data-price="900">Wheat Flour - ₹900</option>
+    </select>
+    <input type="number" id="qty" placeholder="Quantity">
+    <button onclick="addProduct()">Add</button>
+  </div>
+
+  <!-- Order Table -->
+  <table id="orderTable">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Price</th>
+        <th>Qty</th>
+        <th>Total</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="total">
+    Grand Total: ₹<span id="grandTotal">0</span>
+  </div>
+
+  <button style="margin-top: 15px; width:100%;" onclick="submitOrder()">
+    Submit Order
+  </button>
+</div>
+
+<script>
+  let grandTotal = 0;
+
+  function addProduct() {
+    let productSelect = document.getElementById("product");
+    let productName = productSelect.value;
+    let price = productSelect.options[productSelect.selectedIndex].dataset.price;
+    let qty = document.getElementById("qty").value;
+
+    if (!productName || qty <= 0) {
+      alert("Please select product and quantity");
+      return;
+    }
+
+    let total = price * qty;
+    grandTotal += total;
+
+    let table = document.getElementById("orderTable").getElementsByTagName("tbody")[0];
+    let row = table.insertRow();
+
+    row.innerHTML = `
+      <td>${productName}</td>
+      <td>${price}</td>
+      <td>${qty}</td>
+      <td>${total}</td>
+      <td><button onclick="removeRow(this, ${total})">Remove</button></td>
+    `;
+
+    document.getElementById("grandTotal").innerText = grandTotal;
+  }
+
+  function removeRow(btn, total) {
+    let row = btn.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+
+    grandTotal -= total;
+    document.getElementById("grandTotal").innerText = grandTotal;
+  }
+
+  function submitOrder() {
+    let customerName = document.getElementById("customerName").value;
+    let mobile = document.getElementById("mobile").value;
+    let location = document.getElementById("location").value;
+    let salesPerson = document.getElementById("shopName").value;
+    let billNumber = document.getElementById("billNumber").value;
+    let outstandingBalance = document.getElementById("outstandingBalance").value;
+    let itemCount = document.getElementById("orderTable").getElementsByTagName("tbody")[0].rows.length;
+
+    if (!customerName) {
+      alert("Enter customer details");
+      return;
+    }
+
+    if (itemCount === 0) {
+      alert("Add at least one product before submitting");
+      return;
+    }
+
+    const confirmationMessage =
+      "Please confirm order details:\n\n" +
+      "Customer: " + customerName + "\n" +
+      "Mobile: " + (mobile || "-") + "\n" +
+      "Location: " + (location || "-") + "\n" +
+      "Sales Person: " + (salesPerson || "-") + "\n" +
+      "Bill Number: " + (billNumber || "-") + "\n" +
+      "Outstanding Balance: " + (outstandingBalance || "-") + "\n" +
+      "Items: " + itemCount + "\n" +
+      "Grand Total: ₹" + grandTotal + "\n\n" +
+      "Submit this order?";
+
+    const isConfirmed = confirm(confirmationMessage);
+    if (!isConfirmed) {
+      return;
+    }
+
+    alert("Order Submitted Successfully!");
+    location.reload();
+  }
+</script>
+
+</body>
+</html>
